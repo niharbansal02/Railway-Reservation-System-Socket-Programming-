@@ -114,7 +114,7 @@ void splug::data_to_client()
         strcpy(buf,"0");
        
         // Wait for message
-        bytesRecv=recv(clientSocket,test,sizeof(test),0);            //recv() function recieves data from client
+        bytesRecv=recv(clientSocket,buf,sizeof(buf),0);            //recv() function recieves data from client
         //recv(socket,variable to store,size of variable,flags)
        
         if(bytesRecv==-1)                                                       
