@@ -12,3 +12,5 @@
 #define corr "Correct!"
 #define incorr "Incorrect!"
 #define def "Please enter correct choice!"
+
+using namespace std;
