@@ -8,10 +8,12 @@ class splug
     int clientSocket;
     int result;
     int buf;                 // *! Changed char buf to int
+    char passbuf[8];
     int bytesRecv;
     string getString;                           //Test var.
 
     public:
+    int dec=1;
     splug()
     {
         listening=socket(AF_INET,SOCK_STREAM,0);
@@ -73,7 +75,34 @@ class splug
         }
     }
 
-    void data_to_client();
+    int id_to_client();
+    int pass_to_client();
+    int decider()
+    {
+        int buffer;
+        buffer=0;
+        bytesRecv=recv(clientSocket,(int*)&buffer,sizeof(buffer),0);
+        if(bytesRecv==-1)                                                       
+        {
+            cerr<<"\033[1;31mThere was a connection issue\033[0m"<<endl;
+            // break;
+        }
+        else if(bytesRecv==0)
+        {                   
+            cout<<"\033[1;31mThe client disconnected\033[0m"<<endl;
+            // break;
+        }  
+        
+        switch(buffer)
+        {
+            case 1: dec=id_to_client();
+                    break;
+            case 2: dec=pass_to_client();
+                    break;
+            case 100: return -1;
+            default: cerr<<"\033[1;33mWaithing for message...\033[0m"<<endl;
+        }
+    }
 
     ~splug()
     {
