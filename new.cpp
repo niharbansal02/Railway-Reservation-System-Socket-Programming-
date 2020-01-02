@@ -1,10 +1,10 @@
 //Inheritence working fine
-//TODO: Complete client send and recieve messsages of id, password;
-//TODO: Make id,password file
+//TODO: Get all quantities a check for which acc. value>0
 //TODO: Booking system
 #include"sock_macro.cpp"
+#define ignore cin.ignore(numeric_limits<streamsize>::max(),'\n')
 //#include"cplug.cpp"
-
+typedef unsigned int ui;
 #define corr "Correct!"
 class cplug
 {
@@ -130,14 +130,16 @@ class cplug
 
 class rail : public cplug
 {
-    int tno;
+    ui tno;
     char tname[16];
     char tempname[16];
     int noTrain;
-    int SL;
-    int A3;
-    int A2;
-    int A1;
+    string from,to;
+    ui SL,A3,A2,A1;
+    int SLp=400;            //Yet to be used;
+    int A3p=600;
+    int A2p=800;
+    int A1p=1000;           //till here
     int mech;                           //Menu choice
     // vector<string> troute;
     int noStation;
@@ -148,12 +150,21 @@ class rail : public cplug
     // int get_tno;
     // unsigned int count=0;
 
-    void def_no_seats()         //! Admin
+    void def_no_seats()         //! Admin       //TESTING LEFT
     {   
-        cout<<"\n Enter no. of seats in Sleeper: ";   cin>>SL; 
-        cout<<"\n Enter no. of seats in 3 Tier AC: "; cin>>A3;
-        cout<<"\n Enter no. of seats in 2 Tier AC: "; cin>>A2; 
-        cout<<"\n Enter no. of seats in 1 Tier AC: "; cin>>A1; 
+        do
+        {
+            system("clear");
+            cout<<"\n Enter no. of seats in Sleeper: ";   cin>>SL; 
+            cout<<"\n Enter no. of seats in 3 Tier AC: "; cin>>A3;
+            cout<<"\n Enter no. of seats in 2 Tier AC: "; cin>>A2; 
+            cout<<"\n Enter no. of seats in 1 Tier AC: "; cin>>A1; 
+            if(SL<0 || A3<0 || A2<0 || A1<0)
+            {    
+                cerr<<"\n \033[1;31m How can no. of seats be negative!! Re-enter! \033[0m";
+                sleep(1);
+            }
+        }while(SL<0 || A3<0 || A2<0 || A1<0);
         print_to_stream();
     }
 
@@ -181,16 +192,282 @@ class rail : public cplug
         
         train_det<<tno<<" ";
         train_det<<tname<<" ";
-        train_det<<SL<<" ";
-        train_det<<A3<<" ";
-        train_det<<A2<<" ";
-        train_det<<A1<<" ";
+
+        if(SL<10)
+            train_det<<"0"<<SL<<" ";
+        else
+            train_det<<SL<<" ";
+
+        if(A3<10)
+            train_det<<"0"<<A3<<" ";
+        else
+            train_det<<A3<<" ";
+
+        if(A2<10)
+            train_det<<"0"<<A2<<" ";
+        else
+            train_det<<A2<<" ";
+        
+        if(A1<10)
+            train_det<<"0"<<A1<<" ";
+        else
+            train_det<<A1<<" ";
 
         train_det.close();
 
     }
 
+    void update_train_no(int flag)
+    {
+        string B,C;
+        train_det.open("trainDetails.txt",ios::in|ios::binary);
+        fcheck();
+        train_det.seekg(35*flag);
+        char uptno[6];
+        cout<<" Enter updated train no.: ";
+        cin>>uptno;
+        char A[35*flag];
+        train_det.seekg(0);
+        train_det.getline(A,(35*flag));
+        train_det.close();
+
+        train_det.open("trainDetails.txt",ios::in|ios::binary);
+        train_det.seekg(35*flag + 6);
+        getline(train_det,C);
+        train_det.close();
+
+        // cout<<A<<" "<<uptno<<" "<<C;
+
+        train_det.open("trainDetails.txt",ios::out|ios::binary);
+        train_det<<A<<" "<<uptno<<" "<<C;
+    }
+
+    void update_train_name(int trainIndex) 
+    {
+        int currSeek=trainIndex*35;
+        cout<<" Enter (new) train name: "; 
+        ignore;
+        cin.getline(tname,16);
+        for(int i=0;i<strlen(tname);i++)
+        {
+            if(tname[i]==' ')
+                tname[i]='0';
+        }
+        for(int i=strlen(tname);i<16;i++)
+            tname[i]='0';
+        tname[16]='\0';
+
+        char A[currSeek+6];
+        string C;
+        train_det.open("trainDetails.txt",ios::in|ios::binary);
+        train_det.seekg(0);
+        train_det.getline(A,(currSeek+6));
+        train_det.close();
+
+        train_det.open("trainDetails.txt",ios::in|ios::binary);
+        train_det.seekg(currSeek+23);
+        getline(train_det,C);
+        cout<<A<<endl;
+        cout<<tname<<endl;;
+        cout<<C;
+        train_det.close();
+
+        train_det.open("trainDetails.txt",ios::out|ios::binary);
+        train_det.seekg(0);
+        train_det<<A<<" "<<tname<<" "<<C;
+    }
+
+    void update_no_seats(int trainIndex, int coach, int upSeat)     //For direct update
+    {
+        int currSeek=trainIndex*35;
+        int noSeat;
+        char X1[currSeek+23];
+        char X2[currSeek+26];
+        char X3[currSeek+29];
+        char X4[currSeek+32];
+        string C;
+
+        switch(coach)
+        {
+            case 1: //SL
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    if(!train_det.is_open());           //!ADD Statement
+                    train_det.seekg(currSeek+23);
+                    train_det>>noSeat;
+                    noSeat=upSeat;
+                    train_det.seekg(0);
+                    train_det.getline(X1,(currSeek+23));
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    train_det.seekg(currSeek+23+3);
+                    getline(train_det,C);
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::out|ios::binary);
+                    train_det<<X1<<" "<<noSeat<<" "<<C;
+                    train_det.close();
+                    break;
+            case 2: //3A
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    if(!train_det.is_open());           //!ADD Statement
+                    train_det.seekg(currSeek+26);
+                    train_det>>noSeat;          
+                    noSeat=upSeat;                   
+                    train_det.seekg(0);
+                    train_det.getline(X2,(currSeek+26));        
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    train_det.seekg(currSeek+26+3);
+                    getline(train_det,C);
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::out|ios::binary);
+                    train_det<<X2<<" "<<noSeat<<" "<<C;
+                    train_det.close();
+                    break;
+            case 3: //2A
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    if(!train_det.is_open());           //!ADD Statement
+                    train_det.seekg(currSeek+29);
+                    train_det>>noSeat;
+                    noSeat=upSeat;
+                    train_det.seekg(0);
+                    train_det.getline(X3,(currSeek+29));
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    train_det.seekg(currSeek+29+3);
+                    getline(train_det,C);
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::out|ios::binary);
+                    train_det<<X3<<" "<<noSeat<<" "<<C;
+                    train_det.close();
+
+                    break;
+            case 4: //1A
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    if(!train_det.is_open());           //!ADD Statement
+                    train_det.seekg(currSeek+32);
+                    train_det>>noSeat;
+                    noSeat=upSeat;
+                    train_det.seekg(0);
+                    train_det.getline(X4,(currSeek+32));
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    train_det.seekg(currSeek+32+3);
+                    getline(train_det,C);
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::out|ios::binary);
+                    train_det<<X4<<" "<<noSeat<<" "<<C;
+                    train_det.close();
+
+                    break;
+            default: cerr<<"\n \033[1;31mCan't Happen! Contact DEV! \033[0m";
+                    exit(0);
+        } 
+    }
+
+    void update_no_seats(int trainIndex,int coach)                 //For ticket booking update
+    {
+        int currSeek=trainIndex*35;
+        int noSeat;
+        char X1[currSeek+23];
+        char X2[currSeek+26];
+        char X3[currSeek+29];
+        char X4[currSeek+32];
+
+        string C;
+        switch(coach)
+        {
+            case 1: //SL
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    if(!train_det.is_open());           //!ADD Statement
+                    train_det.seekg(currSeek+23);
+                    train_det>>noSeat;
+                    noSeat--;
+                    train_det.seekg(0);
+                    train_det.getline(X1,(currSeek+23));
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    train_det.seekg(currSeek+23+3);
+                    getline(train_det,C);
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::out|ios::binary);
+                    train_det<<X1<<" "<<noSeat<<" "<<C;
+                    train_det.close();
+                    break;
+            case 2: //3A
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    if(!train_det.is_open());           //!ADD Statement
+                    train_det.seekg(currSeek+26);
+                    train_det>>noSeat;          
+                    noSeat--;                   
+                    train_det.seekg(0);
+                    train_det.getline(X2,(currSeek+26));        
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    train_det.seekg(currSeek+26+3);
+                    getline(train_det,C);
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::out|ios::binary);
+                    train_det<<X2<<" "<<noSeat<<" "<<C;
+                    train_det.close();
+                    break;
+            case 3: //2A
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    if(!train_det.is_open());           //!ADD Statement
+                    train_det.seekg(currSeek+29);
+                    train_det>>noSeat;
+                    noSeat--;
+                    train_det.seekg(0);
+                    train_det.getline(X3,(currSeek+29));
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    train_det.seekg(currSeek+29+3);
+                    getline(train_det,C);
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::out|ios::binary);
+                    train_det<<X3<<" "<<noSeat<<" "<<C;
+                    train_det.close();
+
+                    break;
+            case 4: //1A
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    if(!train_det.is_open());           //!ADD Statement
+                    train_det.seekg(currSeek+32);
+                    train_det>>noSeat;
+                    noSeat--;
+                    train_det.seekg(0);
+                    train_det.getline(X4,(currSeek+32));
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::in|ios::binary);
+                    train_det.seekg(currSeek+32+3);
+                    getline(train_det,C);
+                    train_det.close();
+
+                    train_det.open("trainDetails.txt",ios::out|ios::binary);
+                    train_det<<X4<<" "<<noSeat<<" "<<C;
+                    train_det.close();
+
+                    break;
+            default: cerr<<"\n \033[1;31mCan't Happen! Contact DEV! \033[0m";
+                    exit(0);
+        }        
+    }
     public:
+    
     rail()
     {
         string whole;
@@ -262,19 +539,33 @@ class rail : public cplug
 
     void def_train_det()        //! Admin
     {
-        cout<<"\n \t\t\t**** Enter Train Details ***"<<endl;    
-        cout<<"\n Enter train no.: ";  cin>>tno;      
-        cout<<" Enter train name: "; 
-        cin.getline(tname,16);
-        cin.getline(tname,16);
-        for(int i=0;i<strlen(tname)+1;i++)
+        do
         {
+            system("clear");
+            cout<<"\n \t\t\t**** Enter Train Details ***"<<endl;    
+            cout<<"\n Enter 5 digit train no.: ";  cin>>tno;   
+            if(tno<10000 || tno>99999)
+            {   
+                cerr<<"\n \033[1;31m Check the train no.! Re-enter\033[0m";
+                sleep(1);
+            }
+        }while(tno<10000 || tno>99999);
+
+        cout<<" Enter train name(less than 16 char.): ";        //Tname is already adjusted to 15 char. because of size;
+        ignore;
+        cin.getline(tname,16);
+
+        //Casting tname to tname of 15 characters.
+        for(int i=0;i<strlen(tname);i++)              
+        {                                         
             if(tname[i]==' ')
                 tname[i]='0';
         }
         for(int i=strlen(tname);i<16;i++)
             tname[i]='0';
-        def_no_seats();
+        tname[16]='\0';
+
+        def_no_seats();        
         // def_train_route();
     }
     
@@ -391,16 +682,19 @@ class rail : public cplug
         }
     }
 
-    void update_train_details()
+    void update_train_details()             //*This & associated functions working good
     {
         int tellpoint;
+        int mech;
         int search;
-        string B,C;
         int flag=-1;
         int stno;
+        int newSeat;
         train_det.open("trainDetails.txt",ios::in|ios::binary);
         fcheck();
         // cin.ignore(numeric_limits<streamsize>::max(),'\n');      //uncomment it later 
+        ag:                                                 //Replace this goto label
+        system("clear");
         cout<<"\n Enter train no.: "; cin>>stno;
         train_det.seekg(0);
         for(int i=0;i<noTrain;i++)
@@ -414,29 +708,54 @@ class rail : public cplug
                 break;
             }    
         }
-        if(flag!=-1)
+        train_det.close();
+        if(flag==-1)
         {
-            train_det.open("trainDetails.txt",ios::in|ios::binary);
-            fcheck();
-            train_det.seekg(35*flag);
-            char uptno[6];
-            cout<<" Enter updated train no.: ";
-            cin>>uptno;
-            char A[35*flag];
-            train_det.seekg(0);
-            train_det.getline(A,(35*flag));
-            train_det.close();
-
-            train_det.open("trainDetails.txt",ios::in|ios::binary);
-            train_det.seekg(35*flag + 6);
-            getline(train_det,C);
-            train_det.close();
-
-            // cout<<A<<" "<<uptno<<" "<<C;
-
-            train_det.open("trainDetails.txt",ios::out|ios::binary);
-            train_det<<A<<" "<<uptno<<" "<<C;
+            cerr<<"\n \033[1;31m Error! Train not found!\033[0m";
+            sleep(1);
+            goto ag;
         }
+        system("clear");
+        do
+        {
+            cout<<"\n What do you want to update? "<<endl;
+            cout<<" 1. Train No. "<<endl;
+            cout<<" 2. Train Name "<<endl;
+            cout<<" 3. No. of Seats SL "<<endl;
+            cout<<" 4. No. of Seats in 3A "<<endl;
+            cout<<" 5. No. of Seats in 2A "<<endl;
+            cout<<" 6. No. of seats in 1A "<<endl;
+            cout<<" Enter your choice: "; cin>>mech;
+
+            switch(mech)
+            {
+                case 1: update_train_no(flag);
+                        break;
+                case 2: update_train_name(flag);
+                        break;
+                case 3: // 1
+                        cout<<"\n Enter new no. of seats(<100): ";
+                        cin>>newSeat;
+                        update_no_seats(flag,1,newSeat);
+                        break;
+                case 4: //2
+                        cout<<"\n Enter new no. of seats(<100): ";
+                        cin>>newSeat;
+                        update_no_seats(flag,2,newSeat);
+                        break;
+                case 5: //3
+                        cout<<"\n Enter new no. of seats(<100): ";
+                        cin>>newSeat;
+                        update_no_seats(flag,3,newSeat);
+                        break;
+                case 6: //4
+                        cout<<"\n Enter new no. of seats(<100): ";
+                        cin>>newSeat;
+                        update_no_seats(flag,4,newSeat);
+                        break;
+                default: cerr<<"\n\033[1;31m Please select a correct choice! \033[0m";
+            }
+        }while(mech<1 || mech>6);
     }
     void fcheck()
     {
@@ -455,7 +774,8 @@ class rail : public cplug
             system("clear");
             cout<<"\n \033[1;32m ADMIN MODE\033[0m"<<endl;
             cout<<"Enter your id: "; cin>>adminID;
-            cin.ignore(numeric_limits<streamsize>::max(),'\n');     
+            // cin.ignore(numeric_limits<streamsize>::max(),'\n');     
+            ignore;
             if(id_to_server(adminID)==1)
             {
                 cout<<"Enter password: "; getline(cin,adminPass);
@@ -497,10 +817,139 @@ class rail : public cplug
             }while(adch<1 || adch>6);
         }
     }
+
     
+    void ticket()
+    {
+        int flag=-1;
+        int i;
+        train_det.open("trainDetails.txt",ios::in|ios::binary);
+        if(!train_det.is_open())
+        {
+            cerr<<"\n \033[1;31mError getting train details\033[0m";
+            exit(-1);
+        }
+
+        while(flag==-1)
+        {      
+            system("clear");
+            cout<<"\n Welcome to ticket booking section";
+            cout<<"\n Enter train no. you want to book ticket for: ";
+            cin>>tno;
+            train_det.seekg(0);
+            int stno;
+            for(i=0;i<noTrain;i++)
+            {
+                train_det.seekg(35*i);
+                train_det>>stno;
+                if(stno==tno)
+                {
+                    flag=1;
+                    break;
+                }
+            }
+
+            if(flag==-1)
+            {
+                cerr<<"\n \033[1;31mCan't find train no.! Re-enter\033[0m";
+                sleep(1);
+            }
+            else
+            {
+                string name;
+                int age;
+                ignore;
+                cout<<"\n From: "; getline(cin,from);
+                cout<<"\n To: "; getline(cin,to);
+                //! check whether from and to are in tno route or not
+                train_det.seekg(35*i + 23);
+                cout<<"Available Seats "<<endl;
+                cout<<"SL 3A 2A 1A";
+                char getd[12];
+                train_det.getline(getd,12);
+                cout<<"\n"<<getd<<endl;
+                train_det.close();
+                fstream fout;
+                cout<<"\n Enter no. of seats in SL: "; cin>>SL;
+                for(int j=0;j<SL;j++)
+                {   
+                    ignore;
+                    fout.open("ticket.txt",ios::out|ios::binary|ios::app);
+                    cout<<"\n Enter name of traveller "<<j<<": "; getline(cin,name); fout<<name<<" ";
+                    cout<<"\n Enter age of traveller "<<j<<": "; cin>>age;  fout<<age<<" ";
+                    fout.close();
+                    update_no_seats(i,1);                    
+                }
+                
+                cout<<"\n Enter no. of seats in 3A: "; cin>>A3;
+                for(int j=0;j<A3;j++)
+                {
+                    ignore;
+                    fout.open("ticket.txt",ios::out|ios::binary|ios::app);
+                    cout<<"\n Enter name of traveller "<<j<<": "; getline(cin,name); fout<<name<<" ";
+                    cout<<"\n Enter age of traveller "<<j<<": "; cin>>age; fout<<age<<" ";
+                    fout.close();
+                    update_no_seats(i,2);                    
+                }
+                
+                cout<<"\n Enter no. of seats in 2A: "; cin>>A2;    
+                for(int j=0;j<A2;j++)
+                {
+                    ignore;
+                    fout.open("ticket.txt",ios::out|ios::binary|ios::app);
+                    cout<<"\n Enter name of traveller "<<j<<": "; getline(cin,name); fout<<name<<" ";
+                    cout<<"\n Enter age of traveller "<<j<<": "; cin>>age; fout<<age<<" ";
+                    fout.close();
+                    update_no_seats(i,3);
+                }
+
+                cout<<"\n Enter no. of seats in 1A: "; cin>>A1;
+                for(int j=0;j<A1;j++)
+                {
+                    ignore;
+                    fout.open("ticket.txt",ios::out|ios::binary|ios::app);
+                    cout<<"\n Enter name of traveller "<<j<<": "; getline(cin,name); fout<<name<<" ";
+                    cout<<"\n Enter age of traveller "<<j<<": "; cin>>age; fout<<age<<" ";
+                    fout.close();
+                    update_no_seats(i,4);
+                }
+            }
+        }
+    }
+    void PNR();
+    void fare();
     void user()
     {
-        cout<<"\n Under construction"<<endl;
+        int usch;
+        do
+            {
+                system("clear");
+                cout<<"\n \033[1;32m USER MENU\033[0m"<<endl;
+                cout<<" 1. Get all train details"<<endl;
+                cout<<" 2. Get particular train details"<<endl;
+                cout<<" 3. Book a ticket "<<endl;
+                cout<<" 4. PNR Status "<<endl;
+                cout<<" 5. Get fare estimate"<<endl;
+                cout<<" 6. Exit"<<endl; 
+                cout<<" Enter your choice: "<<"\033[1;32m"; cin>>usch;
+                cout<<"\033[0m";
+                switch(usch)
+                {
+                    case 1: get_all_trains();            //* Done
+                            break;
+                    case 2: get_train_details();     
+                            break;
+                    case 3: ticket();           //! Under construction
+                            break;
+                    case 4: PNR();        //! Under construction
+                            break;
+                    case 5: fare();
+                            break;
+                    case 6: return;
+                    default:cerr<<"\n \033[1;31mEnter correct choice\033[0m";
+                            sleep(1);
+                }
+            }while(usch<1 || usch>6);
     }
 
     void menu()
@@ -555,7 +1004,8 @@ int main()
     // }
 
     system("clear");
-    obj.update_train_details();
+    // obj.ticket();
+    obj.def_train_det();
     
     /*
     fstream fin;
