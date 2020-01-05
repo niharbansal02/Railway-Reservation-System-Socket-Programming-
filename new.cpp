@@ -1,6 +1,9 @@
 //Inheritence working fine
 //TODO: Get all quantities a check for which acc. value>0
 //TODO: Booking system
+//TODO: Add a delete train option to admin menu
+//TODO: ADD date of journey to Ticket
+//TODO: ADD Troute and get it functional
 #include"sock_macro.cpp"
 #define ignore cin.ignore(numeric_limits<streamsize>::max(),'\n')
 //#include"cplug.cpp"
@@ -12,8 +15,10 @@ class cplug
     char passkey[50];
     // int sock;
     int port;
+    int sendInt;                //!Replace the ID,PASS,CHANGE to sendInt later
     int connectRes;
     string ipAddress;
+    int bytesRecieved;
     char buf[4608];
     string strRec;
     sockaddr_in hint;
@@ -64,29 +69,17 @@ class cplug
 
         //*RECV
         strcpy(buf,"0");
-        int bytesRecieved=recv(sock,buf,sizeof(buf),0);
+        bytesRecieved=recv(sock,buf,sizeof(buf),0);
         strRec=string(buf,bytesRecieved);
         if(strcmp(strRec.c_str(),corr)==0)
-            cout<<"\033[1;32m"<<strRec<<"\033[0m"<<endl;
+            return 1;
         else 
         {
-            cout<<"\033[1;31m"<<strRec<<"\033[0m"<<endl;
+            cout<<"\033[1;31mEnter correct ID\033[0m"<<endl;
             sleep(1);
             return -1;
         }
 
-        /*  
-            // FOR STRINGS
-            if(send(sock,ch.c_str(),sizeof(ch)+1,0)==-1)
-            {
-                cerr<<"\033[1;31mCoudnot send data to server[0m";
-                exit(0);
-            }
-            strcpy(buf,"0");                                             //memset
-            int bytesRecieved=recv(sock,ch,sizeof(ch),0);
-            //Display Response
-            cout<<" "<<strRec<<endl;
-        */
         return 1;
     } 
 
@@ -106,17 +99,57 @@ class cplug
             return -1;
         }
         strcpy(buf,"0");                                             //memset
-        int bytesRecieved=recv(sock,passkey,sizeof(passkey),0);
-        strRec=string(passkey,bytesRecieved);
-        if(strcmp(strRec.c_str(),corr)==0)
-            cout<<"\033[1;32m"<<strRec<<"\033[0m"<<endl;
+        bytesRecieved=recv(sock,passkey,sizeof(passkey),0);
+        // strRec=string(passkey,bytesRecieved);
+        if(strcmp(passkey,corr)==0)
+        {
+            cout<<"\033[1;32m Access Granted\033[0m"<<endl;
+            sleep(1);
+        }        
         else 
         {
-            cout<<"\033[1;31m"<<strRec<<"\033[0m"<<endl;
+            cout<<"\033[1;31m Access Denied\033[0m"<<endl;
             sleep(1);
             return -1;
         }
         return 1;
+    }
+
+    int change_pass_req(string pass)
+    {
+        int CHANGE=3;
+        if(send(sock,(int *)&CHANGE,sizeof(CHANGE),0)==-1)
+        {
+            cout<<"\n \033Coudnot send data to server!! \033[0m";
+            sleep(1);
+            return -1;
+        }
+        
+        if(send(sock,pass.c_str(),sizeof(pass),0)==-1)
+        {
+            cout<<"\n \033Could not send data to server!! \033[0m";
+            sleep(1);
+            return -1;
+        }
+
+        //? Checked till here, works fine
+
+        strcpy(buf,"0");
+        bytesRecieved=recv(sock,buf,sizeof(buf),0);
+        // strRec=string(buf,bytesRecieved);
+
+        if(strcmp(buf,corr)==0)
+        {
+            cout<<"\n \033[1;32m Password changed successfully!! \033[0m"<<endl;
+            sleep(1);
+            return 1;
+        }
+        else
+        {
+            cerr<<"\n \033[1;31m Error in changing password!! \033[0m"<<endl;
+            sleep(1);
+            return -1;
+        }        
     }
 
     
@@ -150,11 +183,12 @@ class rail : public cplug
     // int get_tno;
     // unsigned int count=0;
 
-    void def_no_seats()         //! Admin       //TESTING LEFT
+    void def_no_seats()         //! Admin
     {   
         do
         {
             system("clear");
+            cout<<"\n \033[36mNo. of seats must be less than 100\033[0m"<<endl;
             cout<<"\n Enter no. of seats in Sleeper: ";   cin>>SL; 
             cout<<"\n Enter no. of seats in 3 Tier AC: "; cin>>A3;
             cout<<"\n Enter no. of seats in 2 Tier AC: "; cin>>A2; 
@@ -164,11 +198,16 @@ class rail : public cplug
                 cerr<<"\n \033[1;31m How can no. of seats be negative!! Re-enter! \033[0m";
                 sleep(1);
             }
-        }while(SL<0 || A3<0 || A2<0 || A1<0);
+            if(SL>99 || A3>99 || A2>99 || A1>99)
+            {
+                cerr<<"\n \033[1;31mSeats must be less than 100!!! Re-enter! \033[0m";
+                sleep(1);
+            }
+        }while(SL<0 || A3<0 || A2<0 || A1<0 || SL>99 || A3>99 || A2>99 || A1>99);
         print_to_stream();
     }
 
-    void def_train_route()      //! Admin
+    void def_train_route()      //! Admin   //!Broken code
     {
         train_det.open("trainDetails.txt",ios::out|ios::app|ios::binary);
         if(!train_det.is_open())
@@ -177,11 +216,8 @@ class rail : public cplug
         for(int i=0;i<noStation;i++)
         {
             cout<<"\n Enter station name "<<i+1<<": ";
-            // getline(cin,t[count].rStat);
             cin>>rStat;
             train_det<<rStat<<" ";
-            // cin>>t[count].rStat; 
-            // t[count].troute.push_back(t[count].rStat);    
         }
         train_det.close();
     }
@@ -217,7 +253,7 @@ class rail : public cplug
 
     }
 
-    void update_train_no(int flag)
+    int update_train_no(int flag)
     {
         string B,C;
         train_det.open("trainDetails.txt",ios::in|ios::binary);
@@ -240,6 +276,7 @@ class rail : public cplug
 
         train_det.open("trainDetails.txt",ios::out|ios::binary);
         train_det<<A<<" "<<uptno<<" "<<C;
+        return 0;
     }
 
     void update_train_name(int trainIndex) 
@@ -480,51 +517,43 @@ class rail : public cplug
         endpoint=strlen(whole.c_str());
         noTrain=endpoint/35;
     }
-    void change_pass()
+
+    int change_pass()
     {
         string currpass;
         int passvar;
         int aaaa=1;
+        
+        ignore;
         do
         {
             cout<<"\n Enter current password: "; getline(cin,currpass);
             passvar=pass_to_server(currpass);
             if(passvar==1)
             {
-                // cin.ignore(numeric_limits<streamsize>::max(),'\n');     
-                char newpass[8];
+                // cin.ignore(numeric_limits<streamsize>::max(),'\n');  
+                string dumpass;   
+                // char newpass[8];
                 char confpass[8];
                 do
                 {
-                    system("clear");
-                    cout<<"\n Enter new password(max. 7 char.): ";  cin.getline(newpass,8);
-                    cout<<"\n Confirm new password: "; cin.getline(confpass,8);
-                    if(strcmp(newpass,confpass)==0)
+                    do
                     {
-                        fstream fout;
-                        fout.open("pass.txt",ios::out|ios::binary);
-                        if(!fout.is_open())
+                        system("clear");
+                        cout<<"\n Enter new password(max. 7 char.): "; getline(cin,dumpass); 
+                        if(strlen(dumpass.c_str())>7)
                         {
-                            cerr<<"\n \033[1;31mError changing password!\n Contact dev. \033[0m"<<endl;
-                            exit(0);
+                            cerr<<"\n \033[1;31m MAX 7 CHARACTERS!!! \033[0m"<<endl;
+                            sleep(1);
                         }
-                        fout<<newpass;
-                        fout.close();
-                        fout.open("pass.txt",ios::in|ios::binary);
-                        if(!fout.is_open())
-                        {
-                            cerr<<"\n \033[1;31mError changing password!\n Contact dev. \033[0m"<<endl;
-                            exit(0);
-                        }
-                        char conf[8];
-                        fout>>conf;
-                        if(strcmp(conf,newpass)==-1)
-                        {
-                            cerr<<"\n \033[1;31mError changing password!\n Contact dev. \033[0m"<<endl;
-                            exit(0);
-                        }
+                    }while(strlen(dumpass.c_str())>7);
+
+                    cout<<"\n Confirm new password: "; cin.getline(confpass,8);
+                    if(strcmp(dumpass.c_str(),confpass)==0)
+                    {
+                        change_pass_req(dumpass);
                         aaaa=0;
-                        cout<<"\n Password changed successfully!";
+                        break;
                     }
                     else
                     {
@@ -535,9 +564,10 @@ class rail : public cplug
             }
         }while(passvar!=1);
 
+        return 0;
     }
 
-    void def_train_det()        //! Admin
+    int def_train_det()        //! Admin
     {
         do
         {
@@ -567,9 +597,10 @@ class rail : public cplug
 
         def_no_seats();        
         // def_train_route();
+        return 0;
     }
     
-    void get_all_trains()
+    int get_all_trains()
     {
         system("clear");
         char ttno[6];
@@ -612,9 +643,10 @@ class rail : public cplug
             train_det.close();
             cout<<"---------------------------------------------------"<<endl;
         }
+        return 0;
     }
 
-    void get_train_details()
+    int get_train_details()
     {
         char ttno[6];
         char ttname[17];
@@ -630,21 +662,18 @@ class rail : public cplug
         fcheck();
         getline(train_det,whole);
         endpoint=strlen(whole.c_str());
-        // cout<<whole<<endl<<endl;
         train_det.seekg(0);
         while(!train_det.eof())
         {
             train_det>>search;
             if(strcmp(search.c_str(),stno)==0)
             {
-                // cout<<search<<" "<<"FOUND!"<<endl;
                 tellpoint=train_det.tellg();
-                // cout<<tellpoint<<endl;
                 break;
             }
         }
         train_det.close();
-        // cout<<tellpoint<<endl<<endl;
+
         if(tellpoint<endpoint && tellpoint>4)
         {   
             int searchpoint=tellpoint-5;
@@ -679,10 +708,12 @@ class rail : public cplug
         else
         {
             cerr<<"\033[1;31mTrain details not found!\033[0m"<<endl;
+            return -1;
         }
+        return 0;
     }
 
-    void update_train_details()             //*This & associated functions working good
+    int update_train_details()             //*This & associated functions working good
     {
         int tellpoint;
         int mech;
@@ -693,7 +724,6 @@ class rail : public cplug
         train_det.open("trainDetails.txt",ios::in|ios::binary);
         fcheck();
         // cin.ignore(numeric_limits<streamsize>::max(),'\n');      //uncomment it later 
-        ag:                                                 //Replace this goto label
         system("clear");
         cout<<"\n Enter train no.: "; cin>>stno;
         train_det.seekg(0);
@@ -713,7 +743,7 @@ class rail : public cplug
         {
             cerr<<"\n \033[1;31m Error! Train not found!\033[0m";
             sleep(1);
-            goto ag;
+            return -1;
         }
         system("clear");
         do
@@ -725,6 +755,7 @@ class rail : public cplug
             cout<<" 4. No. of Seats in 3A "<<endl;
             cout<<" 5. No. of Seats in 2A "<<endl;
             cout<<" 6. No. of seats in 1A "<<endl;
+            cout<<"\033[1;32m 7. Return to ADMIN Menu \033[0m"<<endl;
             cout<<" Enter your choice: "; cin>>mech;
 
             switch(mech)
@@ -753,9 +784,13 @@ class rail : public cplug
                         cin>>newSeat;
                         update_no_seats(flag,4,newSeat);
                         break;
+                case 7: //Return back to ADMIN menu
+                        return -1;
                 default: cerr<<"\n\033[1;31m Please select a correct choice! \033[0m";
             }
         }while(mech<1 || mech>6);
+
+        return 0;
     }
     void fcheck()
     {
@@ -769,6 +804,7 @@ class rail : public cplug
     {   
         int adch;
         int passvar=-1;
+        int retval;
         do
         {
             system("clear");
@@ -800,21 +836,21 @@ class rail : public cplug
                 cout<<"\033[0m";
                 switch(adch)
                 {
-                    case 1: def_train_det();            //* Done
+                    case 1: retval=def_train_det();            //* Done
                             break;
-                    case 2: update_train_details();     //! Under construction
+                    case 2: retval=update_train_details();     //* Done
                             break;
-                    case 3: get_all_trains();           //* Done
+                    case 3: retval=get_all_trains();           //* Done
                             break;
-                    case 4: get_train_details();        //* Done
+                    case 4: retval=get_train_details();        //* Done
                             break;
-                    case 5: change_pass();              //* Done
+                    case 5: retval=change_pass();              //* Done
                             break;
                     case 6: return;
                     default:cerr<<"\n \033[1;31mEnter correct choice\033[0m";
                             sleep(1);
                 }
-            }while(adch<1 || adch>6);
+            }while(adch<1 || adch>6 || retval==-1);
         }
     }
 
@@ -991,9 +1027,9 @@ int main()
 {
     char choice='y';
     rail obj;
-    // obj.init_hint_struct();
-    // if(obj.connect_to_server()==-1)
-    //     exit(0);
+    obj.init_hint_struct();
+    if(obj.connect_to_server()==-1)
+        exit(0);
     // // while(choice=='y')   
     // // {
     //     system("clear");
@@ -1005,7 +1041,7 @@ int main()
 
     system("clear");
     // obj.ticket();
-    obj.def_train_det();
+    obj.admin();
     
     /*
     fstream fin;
@@ -1014,10 +1050,6 @@ int main()
     fin>>str;
     cout<<endl<<str;
     */
-
-    //TODO: test function seekg to the train no.
-    //TODO: admin login password pass to the server
-    //TODO: pass on to client
 
     return 0;
 }

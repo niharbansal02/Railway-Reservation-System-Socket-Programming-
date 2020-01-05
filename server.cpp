@@ -80,6 +80,7 @@ class splug
 
     int id_to_client();
     int pass_to_client();
+    int edit_pass();
     int decider()
     {
         int buffer;
@@ -102,6 +103,7 @@ class splug
                     break;
             case 2: dec=pass_to_client();
                     break;
+            case 3: dec=edit_pass();
             case 100: return -1;
             default: cerr<<"\033[1;33mWaithing for message...\033[0m"<<endl;
         }
@@ -136,8 +138,8 @@ int main()
             return 0;
         }
     }
-    int n;
-    cin>>n;
+    // int n;
+    // cin>>n;
 
     return 0;
 }
@@ -246,7 +248,70 @@ int splug::pass_to_client()
     // }
 }
 
+int splug::edit_pass()
+{
+    //MEMSET
+    strcpy(passbuf,"0");
 
+    //Wait for message
+    bytesRecv=recv(clientSocket,passbuf,sizeof(passbuf),0);
+
+    cout<<"\033[1;33m"<<passbuf<<"\033[0m"<<endl;           //remove it later
+
+    if(bytesRecv==-1)                                                       
+    {
+        cerr<<"\033[1;31mThere was a connection issue\033[0m"<<endl;
+        return -1;
+        exit(0);
+    }
+    else if(bytesRecv==0)
+    {                   
+        cout<<"\033[1;31mThe client disconnected\033[0m"<<endl;
+        return -1;
+        exit(0);
+        
+    }   
+
+    fstream fout;
+    fout.open("pass.txt",ios::binary|ios::out);
+    if(!fout.is_open())
+    {
+        cerr<<"\033[1;31m Error opening pass file! \033[0m;";
+        return -1;
+        exit(0);
+    }
+    fout<<passbuf;
+    fout.close();
+
+    fstream fin;
+    fin.open("pass.txt",ios::in|ios::binary);
+    if(!fin.is_open())
+    {
+        cerr<<"\n \033[1;31mError changing password!\n Contact dev. \033[0m"<<endl;
+        exit(0);
+    }
+
+    char conf[8];
+    fin>>conf;
+    if(strcmp(conf,passbuf)==0)
+    {
+        if(send(clientSocket,corr,sizeof(corr),0)==-1)
+        {
+            cerr<<"\n \033[1;31mSending error!! \033[0m";
+            return -1;
+        }
+    }
+    else
+    {
+        send(clientSocket,incorrid,sizeof(incorrid),0);
+        cerr<<"\n \033[1;31mError changing password!\n Contact dev. \033[0m"<<endl;
+        return -1;
+        exit(0);
+    }
+    
+    fout.close();
+    return 0;    
+}
 
 
 
