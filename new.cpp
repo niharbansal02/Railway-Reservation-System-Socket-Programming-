@@ -1,11 +1,14 @@
 //Inheritence working fine
+//? PNR:- 6 digit TNO:- 5 digit TNAME:- 15 char.
 //TODO: Get all quantities a check for which acc. value>0
 //TODO: Booking system
 //TODO: Add a delete train option to admin menu
 //TODO: ADD date of journey to Ticket
 //TODO: ADD Troute and get it functional
 #include"sock_macro.cpp"
+#include<time.h>
 #define ignore cin.ignore(numeric_limits<streamsize>::max(),'\n')
+
 //#include"cplug.cpp"
 typedef unsigned int ui;
 #define corr "Correct!"
@@ -167,7 +170,8 @@ class rail : public cplug
     char tname[16];
     char tempname[16];
     int noTrain;
-    string from,to;
+    char from[8];
+    char to[8];
     ui SL,A3,A2,A1;
     int SLp=400;            //Yet to be used;
     int A3p=600;
@@ -180,6 +184,7 @@ class rail : public cplug
     string adminPass;
     string rStat;
     fstream train_det;
+    int pnr;
     // int get_tno;
     // unsigned int count=0;
 
@@ -516,13 +521,15 @@ class rail : public cplug
         
         endpoint=strlen(whole.c_str());
         noTrain=endpoint/35;
+        SL=A3=A2=A1=0;
+
     }
 
     int change_pass()
     {
         string currpass;
         int passvar;
-        int aaaa=1;
+        int flag=1;
         
         ignore;
         do
@@ -531,28 +538,26 @@ class rail : public cplug
             passvar=pass_to_server(currpass);
             if(passvar==1)
             {
-                // cin.ignore(numeric_limits<streamsize>::max(),'\n');  
-                string dumpass;   
-                // char newpass[8];
+                string newpass;   
                 char confpass[8];
                 do
                 {
                     do
                     {
                         system("clear");
-                        cout<<"\n Enter new password(max. 7 char.): "; getline(cin,dumpass); 
-                        if(strlen(dumpass.c_str())>7)
+                        cout<<"\n Enter new password(max. 7 char.): "; getline(cin,newpass); 
+                        if(strlen(newpass.c_str())>7)
                         {
                             cerr<<"\n \033[1;31m MAX 7 CHARACTERS!!! \033[0m"<<endl;
                             sleep(1);
                         }
-                    }while(strlen(dumpass.c_str())>7);
+                    }while(strlen(newpass.c_str())>7);
 
                     cout<<"\n Confirm new password: "; cin.getline(confpass,8);
-                    if(strcmp(dumpass.c_str(),confpass)==0)
+                    if(strcmp(newpass.c_str(),confpass)==0)
                     {
-                        change_pass_req(dumpass);
-                        aaaa=0;
+                        change_pass_req(newpass);
+                        flag=0;
                         break;
                     }
                     else
@@ -560,7 +565,7 @@ class rail : public cplug
                         cerr<<"\n \033[1;31mPasswords do not match!\033[0m";
                         sleep(1);
                     }
-                }while(aaaa==1);
+                }while(flag==1);
             }
         }while(passvar!=1);
 
@@ -810,7 +815,6 @@ class rail : public cplug
             system("clear");
             cout<<"\n \033[1;32m ADMIN MODE\033[0m"<<endl;
             cout<<"Enter your id: "; cin>>adminID;
-            // cin.ignore(numeric_limits<streamsize>::max(),'\n');     
             ignore;
             if(id_to_server(adminID)==1)
             {
@@ -854,17 +858,28 @@ class rail : public cplug
         }
     }
 
-    
+    void gen_PNR()
+    {
+        srand(time(0));
+        pnr=rand()%1000000;
+    }
+
+    void castToSize(char str[],int size)
+    {
+        for(int i=0;i<strlen(str);i++)              
+        {                                         
+            if(str[i]==' ')
+                str[i]='0';
+        }
+        for(int i=strlen(str);i<size;i++)
+            str[i]='0';
+        str[size]='\0';
+    }
+  
     void ticket()
     {
         int flag=-1;
         int i;
-        train_det.open("trainDetails.txt",ios::in|ios::binary);
-        if(!train_det.is_open())
-        {
-            cerr<<"\n \033[1;31mError getting train details\033[0m";
-            exit(-1);
-        }
 
         while(flag==-1)
         {      
@@ -872,6 +887,12 @@ class rail : public cplug
             cout<<"\n Welcome to ticket booking section";
             cout<<"\n Enter train no. you want to book ticket for: ";
             cin>>tno;
+            train_det.open("trainDetails.txt",ios::in|ios::binary);
+            if(!train_det.is_open())
+            {
+                cerr<<"\n \033[1;31mError getting train details\033[0m";
+                exit(-1);
+            }
             train_det.seekg(0);
             int stno;
             for(i=0;i<noTrain;i++)
@@ -884,7 +905,8 @@ class rail : public cplug
                     break;
                 }
             }
-
+            train_det.close();
+            
             if(flag==-1)
             {
                 cerr<<"\n \033[1;31mCan't find train no.! Re-enter\033[0m";
@@ -892,12 +914,26 @@ class rail : public cplug
             }
             else
             {
-                string name;
-                int age;
+                fstream fout;
+                gen_PNR();
+                fout.open("ticket.txt",ios::out|ios::binary|ios::app);      // add ios::app later
+                fout<<pnr<<" "<<tno<<" ";
+                
                 ignore;
-                cout<<"\n From: "; getline(cin,from);
-                cout<<"\n To: "; getline(cin,to);
-                //! check whether from and to are in tno route or not
+                cout<<"From: "; 
+                cin.getline(from,8);                    
+                castToSize(from,8);
+                fout<<from<<" ";
+
+                cout<<"To: ";
+                cin.getline(to,8);
+                castToSize(to,8);
+                fout<<to<<" ";
+                fout.close();
+                
+                //TODO: check whether from and to are in tno route or not
+                train_det.open("trainDetails.txt",ios::in|ios::binary);
+                fcheck();
                 train_det.seekg(35*i + 23);
                 cout<<"Available Seats "<<endl;
                 cout<<"SL 3A 2A 1A";
@@ -905,50 +941,114 @@ class rail : public cplug
                 train_det.getline(getd,12);
                 cout<<"\n"<<getd<<endl;
                 train_det.close();
-                fstream fout;
-                cout<<"\n Enter no. of seats in SL: "; cin>>SL;
+                
+                char name[30];
+                int age;
+                
+                cout<<"\n \033[1;33m A maximum of six seats are allowed per ticket \033[0m"<<endl;
+
+                do
+                {  
+                    cout<<" Enter no. of seats in SL: "; cin>>SL;
+                    if(SL>6)
+                    {
+                        cerr<<"\033[1;31m Denied! No. of seats exceeded the max. limit per ticekt \033[0m"<<endl;
+                        sleep(1);
+                        system("clear");
+                    }
+                }while(SL>6);
+
                 for(int j=0;j<SL;j++)
                 {   
                     ignore;
                     fout.open("ticket.txt",ios::out|ios::binary|ios::app);
-                    cout<<"\n Enter name of traveller "<<j<<": "; getline(cin,name); fout<<name<<" ";
-                    cout<<"\n Enter age of traveller "<<j<<": "; cin>>age;  fout<<age<<" ";
+                    fout<<"SL"<<j+1<<":- ";
+                    cout<<"\n Enter name of traveller "<<j+1<<": "; 
+                    cin.getline(name,30); 
+                    castToSize(name,30);
+                    fout<<name<<" ";
+                    cout<<"\n Enter age of traveller "<<j+1<<": "; cin>>age;  fout<<age<<" ";
                     fout.close();
                     update_no_seats(i,1);                    
                 }
                 
-                cout<<"\n Enter no. of seats in 3A: "; cin>>A3;
+                
+                do
+                {   
+                    cout<<"\n Enter no. of seats in 3A: "; cin>>A3;
+                    if((SL+A3)>6)
+                    {
+                        cerr<<"\033[1;31m Denied! No. of seats exceeded the max. limit per ticekt \033[0m"<<endl;
+                        sleep(1);
+                        system("clear");
+                    }
+                }while((SL+A3)>6);
+                
                 for(int j=0;j<A3;j++)
                 {
                     ignore;
                     fout.open("ticket.txt",ios::out|ios::binary|ios::app);
-                    cout<<"\n Enter name of traveller "<<j<<": "; getline(cin,name); fout<<name<<" ";
-                    cout<<"\n Enter age of traveller "<<j<<": "; cin>>age; fout<<age<<" ";
+                    fout<<"3A"<<j+1<<":- ";
+                    cout<<"\n Enter name of traveller "<<j+1<<": "; 
+                    cin.getline(name,30); 
+                    castToSize(name,30);
+                    fout<<name<<" ";
+                    cout<<"\n Enter age of traveller "<<j+1<<": "; cin>>age; fout<<age<<" ";
                     fout.close();
                     update_no_seats(i,2);                    
                 }
                 
-                cout<<"\n Enter no. of seats in 2A: "; cin>>A2;    
+                
+                do
+                {   
+                    cout<<"\n Enter no. of seats in 2A: "; cin>>A2;
+                    if((SL+A3+A2)>6)
+                    {
+                        cerr<<"\033[1;31m Denied! No. of seats exceeded the max. limit per ticekt \033[0m"<<endl;
+                        sleep(1);
+                        system("clear");
+                    }
+                }while((SL+A3+A2)>6);
+                
                 for(int j=0;j<A2;j++)
                 {
                     ignore;
                     fout.open("ticket.txt",ios::out|ios::binary|ios::app);
-                    cout<<"\n Enter name of traveller "<<j<<": "; getline(cin,name); fout<<name<<" ";
-                    cout<<"\n Enter age of traveller "<<j<<": "; cin>>age; fout<<age<<" ";
+                    fout<<"2A"<<j+1<<":- ";
+                    cout<<"\n Enter name of traveller "<<j+1<<": "; 
+                    cin.getline(name,30);
+                    castToSize(name,30);
+                    fout<<name<<" ";
+                    cout<<"\n Enter age of traveller "<<j+1<<": "; cin>>age; fout<<age<<" ";
                     fout.close();
                     update_no_seats(i,3);
                 }
 
-                cout<<"\n Enter no. of seats in 1A: "; cin>>A1;
+                
+                do
+                {   
+                    cout<<"\n Enter no. of seats in 1A: "; cin>>A1;
+                    if((SL+A2+A3+A1)>6)
+                    {
+                        cerr<<"\033[1;31m Denied! No. of seats exceeded the max. limit per ticekt \033[0m"<<endl;
+                        sleep(1);
+                        system("clear");
+                    }
+                }while((SL+A3+A2+A1)>6);
+                
                 for(int j=0;j<A1;j++)
                 {
                     ignore;
                     fout.open("ticket.txt",ios::out|ios::binary|ios::app);
-                    cout<<"\n Enter name of traveller "<<j<<": "; getline(cin,name); fout<<name<<" ";
-                    cout<<"\n Enter age of traveller "<<j<<": "; cin>>age; fout<<age<<" ";
+                    fout<<"1A"<<j+1<<":- ";
+                    cout<<"\n Enter name of traveller "<<j+1<<": "; 
+                    cin.getline(name,30); 
+                    castToSize(name,30);
+                    fout<<name<<" ";
+                    cout<<"\n Enter age of traveller "<<j+1<<": "; cin>>age; fout<<age<<" ";
                     fout.close();
                     update_no_seats(i,4);
-                }
+                }               //*/
             }
         }
     }
@@ -979,7 +1079,7 @@ class rail : public cplug
                             break;
                     case 4: PNR();        //! Under construction
                             break;
-                    case 5: fare();
+                    case 5: fare();         //! Under Construction
                             break;
                     case 6: return;
                     default:cerr<<"\n \033[1;31mEnter correct choice\033[0m";
@@ -1020,6 +1120,7 @@ class rail : public cplug
         int exitsignal=100;
         send(sock,(int *)&exitsignal,sizeof(exitsignal),0);
         close(sock);
+
     }
 };
 
@@ -1027,9 +1128,9 @@ int main()
 {
     char choice='y';
     rail obj;
-    obj.init_hint_struct();
-    if(obj.connect_to_server()==-1)
-        exit(0);
+    // obj.init_hint_struct();
+    // if(obj.connect_to_server()==-1)
+    //     exit(0);
     // // while(choice=='y')   
     // // {
     //     system("clear");
@@ -1040,9 +1141,8 @@ int main()
     // }
 
     system("clear");
-    // obj.ticket();
-    obj.admin();
-    
+    obj.ticket(); 
+
     /*
     fstream fin;
     string str;

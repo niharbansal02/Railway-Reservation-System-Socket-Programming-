@@ -1,0 +1,29 @@
+ticket.txt
+
+<PNR> <Train No.> <From Station> <To Station> {<Coach_Type><Passanger No.> <Passanger name> <Passanger age>...}
+
+PNR                     :- 6 digits
+Train No.               :- 5 digits
+From Station            :- 8 char.
+To Station              :- 8 char.
+Coach_Type              :- 2 char.
+Passanger No.           :- 3 char.
+Passanger Name          :- 30 char.
+
+e.g.,
+259353 19002 rtm0j000 pune0j00 SL1:- nihar0bansa0000000000000000000 12 SL2:- shahshi0bansal0000000000000000 65 3A1:- sparsh0bansal00000000000000000 26 3A2:- santosh0bansal0560000000000000 56 
+<PNR>  <TNO>  <From>   <TO>    {<CT&N>  <Passanger name>            <PA>  //Repeat }
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+trainDetails.txt
+
+<Train No.> <Train Name> <Seats_SL> <Seats_3A> <Seats_2A> <Seats_1A> 
+
+Train No.               :- 5 digits
+Train Name              :- 16 char.
+Seats                   :- 2 digits
+
+e.g..
+
+19001 hyd0pune0ee00000 40 37 13 20 19002 RTM0UDP0EXP00000 42 36 29 52 19003 hYD0EXP000000000 46 40 30 20 
+<TNO>  <TNAME>        {SL,3A,2A,1A} //Repeat   
