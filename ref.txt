@@ -1,18 +1,19 @@
 ticket.txt
 
-<PNR> <Train No.> <From Station> <To Station> {<Coach_Type><Passanger No.> <Passanger name> <Passanger age>...}
+<No. of ticket> <PNR> <Train No.> <From Station> <To Station> <No. of psgr> {<Coach_Type><Passanger No.> <Passanger name> <Passanger age> <Passanger sex>...}
 
+No. of ticket           :- 3 digits
 PNR                     :- 6 digits
 Train No.               :- 5 digits
+No. of psgr             :- 1 digit
 From Station            :- 8 char.
 To Station              :- 8 char.
 Coach_Type              :- 2 char.
 Passanger No.           :- 3 char.
 Passanger Name          :- 30 char.
+Passanger sex           :- 1 char.
 
 e.g.,
-259353 19002 rtm0j000 pune0j00 SL1:- nihar0bansa0000000000000000000 12 SL2:- shahshi0bansal0000000000000000 65 3A1:- sparsh0bansal00000000000000000 26 3A2:- santosh0bansal0560000000000000 56 
-<PNR>  <TNO>  <From>   <TO>    {<CT&N>  <Passanger name>            <PA>  //Repeat }
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 trainDetails.txt

@@ -1,10 +1,9 @@
 //Inheritence working fine
-//? PNR:- 6 digit TNO:- 5 digit TNAME:- 15 char.
 //TODO: Get all quantities a check for which acc. value>0
-//TODO: Booking system
 //TODO: Add a delete train option to admin menu
 //TODO: ADD date of journey to Ticket
 //TODO: ADD Troute and get it functional
+//TODO: Line 1217
 #include"sock_macro.cpp"
 #include<time.h>
 #define ignore cin.ignore(numeric_limits<streamsize>::max(),'\n')
@@ -290,14 +289,7 @@ class rail : public cplug
         cout<<" Enter (new) train name: "; 
         ignore;
         cin.getline(tname,16);
-        for(int i=0;i<strlen(tname);i++)
-        {
-            if(tname[i]==' ')
-                tname[i]='0';
-        }
-        for(int i=strlen(tname);i<16;i++)
-            tname[i]='0';
-        tname[16]='\0';
+        castToSize(tname,16);
 
         char A[currSeek+6];
         string C;
@@ -347,7 +339,10 @@ class rail : public cplug
                     train_det.close();
 
                     train_det.open("trainDetails.txt",ios::out|ios::binary);
-                    train_det<<X1<<" "<<noSeat<<" "<<C;
+                    if(noSeat<10)
+                        train_det<<X1<<" 0"<<noSeat<<" "<<C;
+                    else
+                        train_det<<X1<<" "<<noSeat<<" "<<C;
                     train_det.close();
                     break;
             case 2: //3A
@@ -366,7 +361,10 @@ class rail : public cplug
                     train_det.close();
 
                     train_det.open("trainDetails.txt",ios::out|ios::binary);
-                    train_det<<X2<<" "<<noSeat<<" "<<C;
+                    if(noSeat<10)
+                        train_det<<X2<<" 0"<<noSeat<<" "<<C;
+                    else
+                        train_det<<X2<<" "<<noSeat<<" "<<C;
                     train_det.close();
                     break;
             case 3: //2A
@@ -385,7 +383,10 @@ class rail : public cplug
                     train_det.close();
 
                     train_det.open("trainDetails.txt",ios::out|ios::binary);
-                    train_det<<X3<<" "<<noSeat<<" "<<C;
+                    if(noSeat<10)
+                        train_det<<X3<<" 0"<<noSeat<<" "<<C;
+                    else
+                        train_det<<X3<<" "<<noSeat<<" "<<C;
                     train_det.close();
 
                     break;
@@ -405,7 +406,10 @@ class rail : public cplug
                     train_det.close();
 
                     train_det.open("trainDetails.txt",ios::out|ios::binary);
-                    train_det<<X4<<" "<<noSeat<<" "<<C;
+                    if(noSeat<10)
+                        train_det<<X4<<" 0"<<noSeat<<" "<<C;
+                    else
+                        train_det<<X4<<" "<<noSeat<<" "<<C;
                     train_det.close();
 
                     break;
@@ -442,7 +446,10 @@ class rail : public cplug
                     train_det.close();
 
                     train_det.open("trainDetails.txt",ios::out|ios::binary);
-                    train_det<<X1<<" "<<noSeat<<" "<<C;
+                    if(noSeat<10)
+                        train_det<<X1<<" 0"<<noSeat<<" "<<C;
+                    else
+                        train_det<<X1<<" "<<noSeat<<" "<<C;
                     train_det.close();
                     break;
             case 2: //3A
@@ -461,7 +468,10 @@ class rail : public cplug
                     train_det.close();
 
                     train_det.open("trainDetails.txt",ios::out|ios::binary);
-                    train_det<<X2<<" "<<noSeat<<" "<<C;
+                    if(noSeat<10)
+                        train_det<<X2<<" 0"<<noSeat<<" "<<C;
+                    else
+                        train_det<<X2<<" "<<noSeat<<" "<<C;
                     train_det.close();
                     break;
             case 3: //2A
@@ -480,7 +490,10 @@ class rail : public cplug
                     train_det.close();
 
                     train_det.open("trainDetails.txt",ios::out|ios::binary);
-                    train_det<<X3<<" "<<noSeat<<" "<<C;
+                    if(noSeat<10)
+                        train_det<<X3<<" 0"<<noSeat<<" "<<C;
+                    else
+                        train_det<<X3<<" "<<noSeat<<" "<<C;
                     train_det.close();
 
                     break;
@@ -500,7 +513,10 @@ class rail : public cplug
                     train_det.close();
 
                     train_det.open("trainDetails.txt",ios::out|ios::binary);
-                    train_det<<X4<<" "<<noSeat<<" "<<C;
+                    if(noSeat<10)
+                        train_det<<X4<<" 0"<<noSeat<<" "<<C;
+                    else
+                        train_det<<X4<<" "<<noSeat<<" "<<C;
                     train_det.close();
 
                     break;
@@ -589,16 +605,7 @@ class rail : public cplug
         cout<<" Enter train name(less than 16 char.): ";        //Tname is already adjusted to 15 char. because of size;
         ignore;
         cin.getline(tname,16);
-
-        //Casting tname to tname of 15 characters.
-        for(int i=0;i<strlen(tname);i++)              
-        {                                         
-            if(tname[i]==' ')
-                tname[i]='0';
-        }
-        for(int i=strlen(tname);i<16;i++)
-            tname[i]='0';
-        tname[16]='\0';
+        castToSize(tname,16);
 
         def_no_seats();        
         // def_train_route();
@@ -915,10 +922,36 @@ class rail : public cplug
             else
             {
                 fstream fout;
+                fstream fin;
+                int noticket=0;
+                re:
+                fin.open("ticket.txt",ios::binary|ios::in);
+                fin>>noticket;
+                noticket++;
+
+                string c;
+                fin.seekg(4);
+                getline(fin,c);
+                fin.close();
+                fout.open("ticket.txt",ios::out|ios::binary);
+                fout.seekp(0);
+                if(noticket<10)
+                    fout<<"00"<<noticket<<" "<<c;       //Not added a " " after c as c itself contains " " at end
+                else if(noticket<100)
+                    fout<<"0"<<noticket<<" "<<c;
+                else if(noticket<1000)
+                    fout<<noticket<<" "<<c;
+                else
+                {
+                    cerr<<"\033[1;31m Stack overloaded, resetting ticket.txt"<<endl;
+                    sleep(1);
+                    system("rm ticket.txt");
+                    goto re;
+                }
+
                 gen_PNR();
-                fout.open("ticket.txt",ios::out|ios::binary|ios::app);      // add ios::app later
+
                 fout<<pnr<<" "<<tno<<" ";
-                
                 ignore;
                 cout<<"From: "; 
                 cin.getline(from,8);                    
@@ -944,115 +977,260 @@ class rail : public cplug
                 
                 char name[30];
                 int age;
+                char sex;
+                int nopsgr=0;
+            
+                cout<<"\n \033[1;33m A maximum of \033[1;31m6\033[1;33m seats are allowed per ticket \033[0m"<<endl;
                 
-                cout<<"\n \033[1;33m A maximum of six seats are allowed per ticket \033[0m"<<endl;
-
+                //* SL
                 do
                 {  
                     cout<<" Enter no. of seats in SL: "; cin>>SL;
-                    if(SL>6)
+                    if(SL > (6-nopsgr))
                     {
-                        cerr<<"\033[1;31m Denied! No. of seats exceeded the max. limit per ticekt \033[0m"<<endl;
+                        cerr<<"\033[1;31m Denied! No. of seats exceeded the no. of passangers \033[0m"<<endl;
                         sleep(1);
                         system("clear");
                     }
                 }while(SL>6);
 
                 for(int j=0;j<SL;j++)
-                {   
+                {  
+                    nopsgr++;
                     ignore;
                     fout.open("ticket.txt",ios::out|ios::binary|ios::app);
                     fout<<"SL"<<j+1<<":- ";
-                    cout<<"\n Enter name of traveller "<<j+1<<": "; 
+                    cout<<" Enter name of traveller "<<j+1<<": "; 
                     cin.getline(name,30); 
                     castToSize(name,30);
                     fout<<name<<" ";
-                    cout<<"\n Enter age of traveller "<<j+1<<": "; cin>>age;  fout<<age<<" ";
+                    cout<<" Enter age of traveller "<<j+1<<": "; cin>>age;  fout<<age<<" ";
+                    do
+                    {
+                        cout<<" Enter the sex of Passenger(M/F): "; cin>>sex; 
+                        sex=toupper(sex); 
+                        if(sex=='M' || sex=='F')
+                            break;
+                        else
+                        {
+                            cerr<<"\033[1;31m Enter M or F!! \033[0m"<<endl;
+                            sleep(1);
+                            system("clear");
+                        }
+                    }while(1);
+                    fout<<sex<<" ";
                     fout.close();
                     update_no_seats(i,1);                    
                 }
                 
-                
+                //* 3A
                 do
                 {   
                     cout<<"\n Enter no. of seats in 3A: "; cin>>A3;
-                    if((SL+A3)>6)
+                    if(A3>(6-nopsgr))
                     {
-                        cerr<<"\033[1;31m Denied! No. of seats exceeded the max. limit per ticekt \033[0m"<<endl;
+                        cerr<<"\033[1;31m Denied! No. of seats exceeded the no. of passangers \033[0m"<<endl;
                         sleep(1);
                         system("clear");
                     }
-                }while((SL+A3)>6);
+                }while(A3>(6-nopsgr));
                 
                 for(int j=0;j<A3;j++)
                 {
+                    nopsgr++;
                     ignore;
                     fout.open("ticket.txt",ios::out|ios::binary|ios::app);
                     fout<<"3A"<<j+1<<":- ";
-                    cout<<"\n Enter name of traveller "<<j+1<<": "; 
+                    cout<<" Enter name of traveller "<<j+1<<": "; 
                     cin.getline(name,30); 
                     castToSize(name,30);
                     fout<<name<<" ";
-                    cout<<"\n Enter age of traveller "<<j+1<<": "; cin>>age; fout<<age<<" ";
+                    cout<<" Enter age of traveller "<<j+1<<": "; cin>>age; fout<<age<<" ";
+                    do
+                    {
+                        cout<<" Enter the sex of Passenger(M/F): "; cin>>sex; 
+                        sex=toupper(sex); 
+                        if(sex=='M' || sex=='F')
+                            break;
+                        else
+                        {
+                            cerr<<"\033[1;31m Enter M or F!! \033[0m"<<endl;
+                            sleep(1);
+                            system("clear");
+                        }
+                    }while(1);
+                    fout<<sex<<" ";
                     fout.close();
                     update_no_seats(i,2);                    
                 }
                 
-                
+                //* 2A
                 do
                 {   
                     cout<<"\n Enter no. of seats in 2A: "; cin>>A2;
-                    if((SL+A3+A2)>6)
+                    if(A2>(6-nopsgr))
                     {
-                        cerr<<"\033[1;31m Denied! No. of seats exceeded the max. limit per ticekt \033[0m"<<endl;
+                        cerr<<"\033[1;31m Denied! No. of seats exceeded the no. of passangers \033[0m"<<endl;
                         sleep(1);
                         system("clear");
                     }
-                }while((SL+A3+A2)>6);
+                }while(A2>(6-nopsgr));
                 
                 for(int j=0;j<A2;j++)
                 {
+                    nopsgr++;
                     ignore;
                     fout.open("ticket.txt",ios::out|ios::binary|ios::app);
                     fout<<"2A"<<j+1<<":- ";
-                    cout<<"\n Enter name of traveller "<<j+1<<": "; 
+                    cout<<" Enter name of traveller "<<j+1<<": "; 
                     cin.getline(name,30);
                     castToSize(name,30);
                     fout<<name<<" ";
-                    cout<<"\n Enter age of traveller "<<j+1<<": "; cin>>age; fout<<age<<" ";
+                    cout<<" Enter age of traveller "<<j+1<<": "; cin>>age; fout<<age<<" ";
+                    do
+                    {
+                        cout<<" Enter the sex of Passenger(M/F): "; cin>>sex; 
+                        sex=toupper(sex); 
+                        if(sex=='M' || sex=='F')
+                            break;
+                        else
+                        {
+                            cerr<<"\033[1;31m Enter M or F!! \033[0m"<<endl;
+                            sleep(1);
+                            system("clear");
+                        }
+                    }while(1);
+                    fout<<sex<<" ";
                     fout.close();
                     update_no_seats(i,3);
                 }
 
-                
+                //* 1A
                 do
                 {   
                     cout<<"\n Enter no. of seats in 1A: "; cin>>A1;
-                    if((SL+A2+A3+A1)>6)
+                    if(A1>(6-nopsgr))
                     {
-                        cerr<<"\033[1;31m Denied! No. of seats exceeded the max. limit per ticekt \033[0m"<<endl;
+                        cerr<<"\033[1;31m Denied! No. of seats exceeded the no. of passangers \033[0m"<<endl;
                         sleep(1);
                         system("clear");
                     }
-                }while((SL+A3+A2+A1)>6);
+                }while(A1>(6-nopsgr));
                 
                 for(int j=0;j<A1;j++)
                 {
+                    nopsgr++;
                     ignore;
                     fout.open("ticket.txt",ios::out|ios::binary|ios::app);
                     fout<<"1A"<<j+1<<":- ";
-                    cout<<"\n Enter name of traveller "<<j+1<<": "; 
+                    cout<<" Enter name of traveller "<<j+1<<": "; 
                     cin.getline(name,30); 
                     castToSize(name,30);
                     fout<<name<<" ";
-                    cout<<"\n Enter age of traveller "<<j+1<<": "; cin>>age; fout<<age<<" ";
+                    cout<<" Enter age of traveller "<<j+1<<": "; cin>>age; fout<<age<<" ";
+                    do
+                    {
+                        cout<<" Enter the sex of Passenger(M/F): "; cin>>sex; 
+                        sex=toupper(sex); 
+                        if(sex=='M' || sex=='F')
+                            break;
+                        else
+                        {
+                            cerr<<"\033[1;31m Enter M or F!! \033[0m"<<endl;
+                            sleep(1);
+                            system("clear");
+                        }
+                    }while(1);
+                    fout<<sex<<" ";
                     fout.close();
                     update_no_seats(i,4);
-                }               //*/
+                }               
+                
+                //* Updation of ticket.txt with nopsgr  
+                fin.open("ticket.txt",ios::in|ios::binary);
+                string searchpnr;
+                int location=0;
+                string pnrString;
+                pnrString=to_string(pnr);
+
+                while(!fin.eof())
+                { 
+                    fin>>searchpnr;
+                    if(searchpnr==pnrString)
+                        break;
+                }      
+                location=fin.tellg();
+                int writeLocation=location+24;
+                char A[writeLocation];
+                fin.seekg(0);
+                fin.getline(A,writeLocation);
+                fin.close();
+                
+                fin.open("ticket.txt",ios::in|ios::binary);
+                fin.seekg(writeLocation+1);
+                string C;
+                getline(fin,C);
+                fin.close();
+                
+                fout.open("ticket.txt",ios::out|ios::binary);
+                fout<<A<<" "<<nopsgr<<" "<<C;
+                fout.close();      
             }
         }
     }
-    void PNR();
+
+    void PNR()
+    {
+        system("clear");
+        cout<<" Enter your PNR no.: ";  cin>>pnr;
+        string strPNR;
+        strPNR=to_string(pnr);
+        string spnr;
+        ifstream fin;
+        int location=0;
+        fin.open("ticket.txt",ios::binary);
+        while(!fin.eof())
+        {
+            fin>>spnr;
+            if(spnr==strPNR)
+                break;
+        }
+        location=fin.tellg();
+        fin.seekg(location+1);
+        fin>>tno;
+        cout<<"Train no.: "<<tno<<endl;
+        fin.seekg(location+1+5+1);
+        char from[8];
+        fin>>from;
+        cout<<"From: ";       
+        for(int i=0;i<8;i++)
+        {
+            if(from[i]=='0')
+                cout<<" ";
+            else
+                cout<<from[i];
+        }
+        cout<<endl;
+        fin.close();
+
+        //TODO: Checkout console output why TO is not cooperating with FROM
+        fin.open("ticket.txt",ios::binary);
+        fin.seekg(location+16);
+        char to[8];
+        fin>>to;
+        cout<<"To: ";       
+        for(int i=0;i<8;i++)
+        {
+            if(to[i]=='0')
+                cout<<" ";
+            else
+                cout<<to[i];
+        }
+        cout<<endl;
+        fin.close();
+        
+
+    }
     void fare();
     void user()
     {
@@ -1064,7 +1242,7 @@ class rail : public cplug
                 cout<<" 1. Get all train details"<<endl;
                 cout<<" 2. Get particular train details"<<endl;
                 cout<<" 3. Book a ticket "<<endl;
-                cout<<" 4. PNR Status "<<endl;
+                cout<<" 4. PNR Status/See Ticket "<<endl;
                 cout<<" 5. Get fare estimate"<<endl;
                 cout<<" 6. Exit"<<endl; 
                 cout<<" Enter your choice: "<<"\033[1;32m"; cin>>usch;
@@ -1141,7 +1319,7 @@ int main()
     // }
 
     system("clear");
-    obj.ticket(); 
+    obj.PNR(); 
 
     /*
     fstream fin;
