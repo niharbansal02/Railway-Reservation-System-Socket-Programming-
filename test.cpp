@@ -1,17 +1,14 @@
 #include<iostream>
 #include<fstream>
+#include<conio.h>
 
 using namespace std;
 
 int main()
 {
     system("clear");
-    fstream fin;
-    string asd;
-    fin.open("test.txt",ios::binary|ios::in);
-    fin.seekg(1);
-    getline(fin,asd);
-    cout<<asd<<" ";
-    
+    cout<<"Hello World";
+
+    _getch();    
     return 0;
 }
