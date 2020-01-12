@@ -104,7 +104,8 @@ class splug
             case 2: dec=pass_to_client();
                     break;
             case 3: dec=edit_pass();
-            case 100: return -1;
+            case 100:   dec=-1;
+                        return -1;
             default: cerr<<"\033[1;33mWaithing for message...\033[0m"<<endl;
         }
     }
@@ -131,12 +132,9 @@ int main()
     obj.connect_message();
     // obj.data_to_client();
     obj.decider();            
-    while(obj.dec)
+    while(obj.dec!=-1)
     {
-        if(obj.decider()==-1)
-        {   
-            return 0;
-        }
+        obj.decider();
     }
     // int n;
     // cin>>n;
