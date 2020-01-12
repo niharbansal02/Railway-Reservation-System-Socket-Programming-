@@ -77,7 +77,28 @@ class splug
             cout<<"\033[1;36m"<<host<<"\033[0m connected on "<<"\033[1;33m"<<ntohs(client.sin_port)<<"\033[0m"<<endl;
         }
     }
+    
+    /*
+    string encrypt(string &pass)
+    {
+        for(int i=0;pass[i]!='\0';i++)
+        {
+            pass[i]=pass[i]+(i+1);
+        }
+        return pass;
+    }
 
+    string decrypt(string epass)
+    {
+        string dpass;
+        for(int i=0;epass[i]!='\0';i++)
+        {
+            epass[i]=(epass[i])-(i+1);
+        }
+        return epass;
+    }
+
+    */
     int id_to_client();
     int pass_to_client();
     int edit_pass();
@@ -130,14 +151,20 @@ int main()
         exit(0);
     obj.close_listening();
     obj.connect_message();
-    // obj.data_to_client();
     obj.decider();            
     while(obj.dec!=-1)
     {
         obj.decider();
     }
+    
     // int n;
     // cin>>n;
+
+    // string pass="pass78\0";
+    // cout<<obj.encrypt(pass)<<endl;
+    // cout<<obj.decrypt(pass)<<endl;
+
+
 
     return 0;
 }

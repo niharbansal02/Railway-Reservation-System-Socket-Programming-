@@ -181,10 +181,7 @@ class rail : public cplug
     char rStat[10];
     fstream train_det;
     int pnr;
-    int slf[10]={200,350,450,500,600,712,869,989,1036,1400};
-    int a3f[10]={400,550,650,700,900,1112,1369,1589,2036};
-    int a2f[10]={700,850,1150,1300,1400,1512,1769,1989,2136};
-    int a1f[10]={1200,1550,1650,1700,1900,2112,2369,2589,3036};
+    int slf[10],a3f[10],a2f[10],a1f[10];
     // int get_tno;
     // unsigned int count=0;
 
@@ -667,70 +664,7 @@ class rail : public cplug
 
     }
 
-    int update_fare()
-    {
-        int uFare,ch,slab;
-        do
-        {
-            system("clear");
-            cout<<" Which class' fare do you wish to update? : ";
-            cout<<" 1. SL\n 2. 3A\n 3. 2A\n 4. 1A "<<endl;
-            cout<<" Enter your choice: "; cin>>ch;
-            if(ch<1 || ch>4)
-            {
-                cerr<<"\033 [1;31m No such coach option \033[0m";
-                sleep(1);
-            }
-        }while(ch<1 || ch>4);
-            
-        system("clear");
-        cout<<" Every 100 km accounts for a slab. "<<endl;;
-        cout<<" Slab 1: 0-99km\n Slab 2:- 100-199km \n ...";
-        cout<<" Which slab's fare would you like to change ?";
-        cin>>slab;
-        if(slab<1 || slab>10)
-        {
-            cout<<"\033[1;31m No such slab \033[03";
-            return -1;
-        }    
-
-        slab--;
-        
-        switch(ch)
-        {
-            case 1://SL
-                    cout<<" Current Fare per seat: "<<slf[slab];
-                    cout<<" Enter updated fare per seat: ";
-                    cin>>uFare;
-                    uFare=abs(uFare);
-                    slf[slab]=uFare;
-                    break;
-            case 2://3A
-                    cout<<" Current Fare per seat: "<<a3f[slab];
-                    cout<<" Enter updated fare per seat: ";
-                    cin>>uFare;
-                    uFare=abs(uFare);
-                    a3f[slab]=uFare;
-                    break;
-            case 3://2A
-                    cout<<" Current Fare per seat: "<<a2f[slab];
-                    cout<<" Enter updated fare per seat: ";
-                    cin>>uFare;
-                    uFare=abs(uFare);
-                    a2f[slab]=uFare;
-                    break;
-            case 4://1A
-                    cout<<" Current Fare per seat: "<<a1f[slab];
-                    cout<<" Enter updated fare per seat: ";
-                    cin>>uFare;
-                    uFare=abs(uFare);
-                    a1f[slab]=uFare;
-                    break;
-        }
-        cout<<"\n\033[1;32m Updated! \033[0m"<<endl;
     
-        return 0;
-    }
 
     void gen_PNR()
     {
@@ -855,8 +789,147 @@ class rail : public cplug
         noTrain=endpoint/35;
         SL=A3=A2=A1=0;
 
+        // * Init fare
+        ifstream fare;
+        fare.open("fare.txt",ios::binary);
+        
+        int i=0;
+        //* Get SL fare
+        while(!fare.eof())
+        {
+            fare>>slf[i];
+            i++;
+            if(i==10)
+                break;
+        }
+
+        i=0;
+        //* Get 3A fare
+        while(!fare.eof())
+        {
+            fare>>a3f[i];
+            i++;
+            if(i==10)
+                break;
+        }
+        
+        i=0;
+        //* Get 2A fare
+        while(!fare.eof())
+        {
+            fare>>a2f[i];
+            i++;
+            if(i==10)
+                break;
+        }
+        
+        i=0;
+        //* Get 1A fare
+        while(!fare.eof())
+        {
+            fare>>a1f[i];
+            i++;
+            if(i==10)
+                break;
+        }
+    }
+    
+    int update_fare()
+    {
+        int uFare,ch,slab;
+        do
+        {
+            system("clear");
+            cout<<" Which class' fare do you wish to update? "<<endl;
+            cout<<" 1. SL\n 2. 3A\n 3. 2A\n 4. 1A "<<endl;
+            cout<<" Enter your choice: "; cin>>ch;
+            if(ch<1 || ch>4)
+            {
+                cerr<<"\033 [1;31m No such coach option \033[0m";
+                sleep(1);
+            }
+        }while(ch<1 || ch>4);
+            
+        system("clear");
+        cout<<" Every 100 km accounts for a slab. "<<endl;;
+        cout<<" \033[1;32mSlab 1:\033[0m 0-99km\n \033[1;32mSlab 2:\033[0m 100-199km \n \033[1;32mSlab 3:\033[0m 200-299km \n .\n . \n . \n\033[1;32m Slab 10:\033[0m 1000 km"<<endl;
+        cout<<"\n Enter the slab no. whose fare you wish to change: ";
+        cin>>slab;
+        if(slab<1 || slab>10)
+        {
+            cout<<"\033[1;31m No such slab \033[0m";
+            return -1;
+        }    
+
+        slab--;
+        fstream fare,fout;
+        string C;
+        int location;
+
+        //TODO: stack dump.exe created don't know why! Check data type conversions
+        //TODO: Check step by step8
+        switch(ch)
+        {
+            case 1://SL
+                    cout<<" Current Fare per seat: "<<slf[slab]<<endl;
+                    cout<<" Enter updated fare per seat: ";
+                    cin>>uFare;
+                    uFare=abs(uFare);
+                    slf[slab]=uFare;
+                    break;
+            case 2://3A
+                    cout<<" Current Fare per seat: "<<a3f[slab]<<endl;
+                    cout<<" Enter updated fare per seat: ";
+                    cin>>uFare;
+                    uFare=abs(uFare);
+                    a3f[slab]=uFare;
+                    break;
+            case 3://2A
+                    cout<<" Current Fare per seat: "<<a2f[slab]<<endl;
+                    cout<<" Enter updated fare per seat: ";
+                    cin>>uFare;
+                    uFare=abs(uFare);
+                    a2f[slab]=uFare;
+                    break;
+            case 4://1A
+                    cout<<" Current Fare per seat: "<<a1f[slab]<<endl;
+                    cout<<" Enter updated fare per seat: ";
+                    cin>>uFare;
+                    uFare=abs(uFare);
+                    a1f[slab]=uFare;
+                    break;
+        }
+
+        fare.open("fare.txt",ios::in|ios::binary);
+        location=((ch-1)*50)+(slab*5);
+        char A[location];
+        fare.getline(A,location);
+        fare.close();
+
+        fare.open("fare.txt",ios::in|ios::binary);
+        fare.seekg(location+5);
+        getline(fare,C);
+        fare.close();
+
+        fout.open("fare.txt",ios::out|ios::binary);
+        if(uFare<1000)
+            fout<<A<<" 0"<<uFare<<" "<<C;
+        else if(uFare<10000)
+            fout<<A<<" "<<uFare<<" "<<C;
+        fout.close();
+        cout<<"\n\033[1;32m Updated! \033[0m"<<endl;
+            // */
+        return 0;
     }
 
+    void print()
+    {
+        cout<<"SL\t3A\t2A\t1A"<<endl;
+        for(int i=0;i<10;i++)
+        {
+            cout<<slf[i]<<"\t"<<a3f[i]<<"\t"<<a2f[i]<<"\t"<<a1f[i]<<endl;
+        }
+    }
     void def_train_route(int tno)      //! Admin 
     {
         train_det.open("distance.txt",ios::out|ios::binary|ios::app);
@@ -1957,11 +2030,11 @@ int main()
 {
     system("clear");
     rail obj;
-    // obj.init_hint_struct();
-    // if(obj.connect_to_server()==-1)
-    //     exit(0);
-
-    obj.admin(); 
+    obj.init_hint_struct();
+    if(obj.connect_to_server()==-1)
+        exit(0);
+        
+    obj.menu(); 
         
     return 0;
 }
