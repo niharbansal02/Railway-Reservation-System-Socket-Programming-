@@ -6,6 +6,7 @@
 #include"sock_macro.cpp"
 #include<time.h>
 #include<math.h>
+
 #define ignore cin.ignore(numeric_limits<streamsize>::max(),'\n')
 
 //#include"cplug.cpp"
@@ -2030,11 +2031,24 @@ int main()
 {
     system("clear");
     rail obj;
-    obj.init_hint_struct();
-    if(obj.connect_to_server()==-1)
-        exit(0);
+    // obj.init_hint_struct();
+    // if(obj.connect_to_server()==-1)
+    //     exit(0);
         
     obj.menu(); 
+    char a[3];
+    ignore;
+    // a=cin.get();
+    cout<<"Password: ";
+    for(int i=0;i<3;i++)
+    {
+        a[i]=_getch();
+        system("clear");
+        cout<<"Password:";
+        for(int j=0;j<=i;j++)
+            cout<<'*';
         
+    }
+
     return 0;
 }

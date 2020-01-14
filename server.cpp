@@ -78,7 +78,6 @@ class splug
         }
     }
     
-    /*
     string encrypt(string &pass)
     {
         for(int i=0;pass[i]!='\0';i++)
@@ -97,8 +96,6 @@ class splug
         }
         return epass;
     }
-
-    */
     int id_to_client();
     int pass_to_client();
     int edit_pass();
@@ -151,14 +148,13 @@ int main()
         exit(0);
     obj.close_listening();
     obj.connect_message();
-    obj.decider();            
     while(obj.dec!=-1)
     {
         obj.decider();
     }
     
     // int n;
-    // cin>>n;
+    // cin>>n;  
 
     // string pass="pass78\0";
     // cout<<obj.encrypt(pass)<<endl;
@@ -227,9 +223,9 @@ int splug::pass_to_client()
         //Clear the buffer
         // memset(buf,0,4096);
         strcpy(passbuf,"0");
-        
+        string str;
         // Wait for message
-        bytesRecv=recv(clientSocket,passbuf,sizeof(passbuf),0);            //recv() function recieves data from client
+        bytesRecv=recv(clientSocket,(void *)&str,sizeof(str),0);            //recv() function recieves data from client
         //recv(socket,variable to store,size of variable,flags)
 
         if(bytesRecv==-1)                                                       
@@ -248,18 +244,21 @@ int splug::pass_to_client()
 
         //* Get pass from file
         fstream fin;
-        fin.open("pass.txt",ios::in|ios::binary);
+        fin.open("pass1.txt",ios::in|ios::binary);
         if(!fin.is_open())
         {
             cerr<<"\033[1;31m Error opening pass file! \033[0m;";
             return -1;
             exit(0);
         }
-        char compPass[8];
-        fin>>compPass;                  //This is working fine!
+        // char compPass[8];
+        string copass;
+        fin>>copass;
+        decrypt(copass);
+        // fin>>compPass;                  //This is working fine!
         fin.close();
         //Displady message 
-        if(strcmp(passbuf,compPass)==0)
+        if(passbuf==copass)
         {
             cout<<"\033[1;32mClient: "<<passbuf<<"\033[0m"<<endl;
             send(clientSocket,corr,sizeof(corr),0);
